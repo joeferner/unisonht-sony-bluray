@@ -1,0 +1,25 @@
+{
+  "name": "unisonht-sony-bluray",
+  "version": "1.0.0",
+  "description": "UnisonHT Plugin for Sony Bluray players",
+  "main": "index.js",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joeferner/unisonht-sony-bluray.git"
+  },
+  "keywords": [
+    "unisonht",
+    "tivo"
+  ],
+  "author": "Joe Ferner <joe@fernsroth.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joeferner/unisonht-sony-bluray/issues"
+  },
+  "homepage": "https://github.com/joeferner/unisonht-sony-bluray#readme",
+  "dependencies": {
+    "unisonht": "^1.0.0"
+  }
+}
