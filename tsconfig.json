@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "lib": ["es7"]
+    "lib": ["es7"],
+    "target": "es5"
   },
   "files": [
-    "typings/index.d.ts",
     "index.ts"
   ]
 }

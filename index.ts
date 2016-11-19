@@ -1,12 +1,33 @@
-import {Device, DeviceOptions} from "unisonht/lib/Device";
+import {UnisonHTDevice} from "unisonht";
 
-interface SonyBlurayOptions extends DeviceOptions {
-  address: string;
-  mac: string;
+export default class SonyBluray implements UnisonHTDevice {
+  private options: SonyBluray.Options;
+
+  constructor(options: SonyBluray.Options) {
+    this.options = options;
+  }
+
+  getName(): string {
+    return this.options.name;
+  }
+
+  buttonPress(button: string): Promise<void> {
+    return Promise.resolve();
+  }
+
+  ensureOn(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  ensureOff(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
-export default class SonyBluray extends Device {
-  constructor(options: SonyBlurayOptions) {
-    super(options);
+module SonyBluray {
+  export interface Options {
+    name: string;
+    address: string;
+    mac: string;
   }
 }
