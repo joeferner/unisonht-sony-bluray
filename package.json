@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "UnisonHT Plugin for Sony Bluray players",
   "main": "index.js",
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/joeferner/unisonht-sony-bluray.git"
@@ -20,6 +19,11 @@
   },
   "homepage": "https://github.com/joeferner/unisonht-sony-bluray#readme",
   "dependencies": {
-    "unisonht": "^1.0.0"
+    "getmac": "^1.2.1",
+    "inquirer": "^1.2.3",
+    "unisonht": "^1.0.0",
+    "wol": "^1.0.3",
+    "xmldom": "^0.1.22",
+    "xpath": "0.0.23"
   }
 }

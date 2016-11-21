@@ -4,6 +4,11 @@
     "target": "es5"
   },
   "files": [
-    "index.ts"
+    "index.ts",
+    "test.ts",
+    "xml.d.ts",
+    "typings/index.d.ts",
+    "wol.d.ts",
+    "getmac.d.ts"
   ]
 }

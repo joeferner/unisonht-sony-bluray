@@ -1,0 +1,7 @@
+interface Document {
+
+}
+
+interface Node {
+
+}
