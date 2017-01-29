@@ -43,7 +43,7 @@ export default class SonyBluray implements UnisonHTDevice {
     }
     const irccXml = SonyBluray.createIRCCXML(commandValue);
 
-    return new Promise((resolve, reject)=> {
+    return new Promise<void>((resolve, reject)=> {
       const options = {
         hostname: this.options.address,
         port: this.options.irccPort,
@@ -87,7 +87,7 @@ export default class SonyBluray implements UnisonHTDevice {
   }
 
   private ensureOnRepeat(retryCount: number): Promise<void> {
-    return new Promise((resolve, reject)=> {
+    return new Promise<void>((resolve, reject)=> {
       return this.sendWakeOnLan()
         .then(()=> {
           return this.getStatus();
@@ -114,7 +114,7 @@ export default class SonyBluray implements UnisonHTDevice {
   }
 
   private sendWakeOnLan(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       wol.wake(this.options.mac, (err) => {
         if (err) {
           log.error('send wol failed: ', err);
@@ -227,7 +227,8 @@ export default class SonyBluray implements UnisonHTDevice {
           return this.tryRegistrationInitial()
         }
         throw err;
-      });
+      })
+      .then(()=>{});
   }
 
   private tryRegistrationInitial(): Promise<void> {
@@ -241,7 +242,8 @@ export default class SonyBluray implements UnisonHTDevice {
             });
         }
         throw err;
-      });
+      })
+      .then(()=>{});
   }
 
   private getRegistrationUrl(type: string): string {
