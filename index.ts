@@ -1,52 +1,48 @@
-import {UnisonHT, UnisonHTDevice} from "unisonht";
+import {Device, UnisonHT, UnisonHTResponse} from "unisonht";
+import * as express from "express";
 import * as xpath from "xpath";
 import * as wol from "wol";
 import * as http from "http";
 import * as xmldom from "xmldom";
 import * as getmac from "getmac";
 import * as inquirer from "inquirer";
-import createLogger from "unisonht/lib/Log";
+import * as Boom from "boom";
 
-const log = createLogger('sonyBluray');
-
-export default class SonyBluray implements UnisonHTDevice {
-  private options: SonyBluray.Options;
+export class SonyBluray extends Device {
   private commandList;
   private authCode: string;
   private macAddress: string;
 
-  constructor(options: SonyBluray.Options) {
-    this.options = options;
-    this.options.irccPort = this.options.irccPort || 50001;
-    this.options.port = this.options.port || 50002;
-    this.options.deviceIdPrefix = this.options.deviceIdPrefix || 'UnisonHT';
-    this.options.deviceName = this.options.deviceName || 'UnisonHT';
+  constructor(name: string, options: SonyBluray.Options) {
+    super(name, options);
+    options.irccPort = options.irccPort || 50001;
+    options.port = options.port || 50002;
+    options.deviceIdPrefix = options.deviceIdPrefix || 'UnisonHT';
+    options.deviceName = options.deviceName || 'UnisonHT';
     this.commandList = {};
   }
 
   start(unisonht: UnisonHT): Promise<void> {
     return this.getMacAddress()
-      .then((macAddress)=> {
+      .then((macAddress) => {
         this.macAddress = macAddress;
       });
   }
 
-  getName(): string {
-    return this.options.name;
-  }
-
-  buttonPress(button: string): Promise<void> {
-    button = SonyBluray.toSonyButton(button);
+  protected handleButtonPress(req: express.Request, res: UnisonHTResponse, next: express.NextFunction): void {
+    const buttonName = req.query.buttonName;
+    const button = SonyBluray.toSonyButton(buttonName);
     const commandValue = this.translateButton(button);
     if (!commandValue) {
-      return Promise.reject(new Error(`Could not find mapping for button ${button}/${commandValue}`));
+      next(Boom.badRequest(`Could not find mapping for button ${button}/${commandValue}`));
+      return;
     }
     const irccXml = SonyBluray.createIRCCXML(commandValue);
 
-    return new Promise<void>((resolve, reject)=> {
+    res.promiseNoContent(new Promise<void>((resolve, reject) => {
       const options = {
-        hostname: this.options.address,
-        port: this.options.irccPort,
+        hostname: this.getOptions().address,
+        port: this.getOptions().irccPort,
         path: '/upnp/control/IRCC',
         method: 'POST',
         headers: {
@@ -59,22 +55,22 @@ export default class SonyBluray implements UnisonHTDevice {
           'Content-Length': irccXml.length
         }
       };
-      const req = http.request(options, (res)=> {
+      const req = http.request(options, (res) => {
         res.setEncoding('utf8');
         res.on('end', () => {
           resolve();
         });
-        res.on('error', (err)=> {
+        res.on('error', (err) => {
           reject(`problem with response: ${err.message}`);
         });
       });
       req.on('error', (err) => {
         reject(`problem with request: ${err.message}`);
       });
-      log.debug(`sending ircc code ${button}/${commandValue}`);
+      this.log.debug(`sending ircc code ${button}/${commandValue}`);
       req.write(irccXml);
       req.end();
-    });
+    }));
   }
 
   ensureOn(): Promise<void> {
@@ -87,26 +83,26 @@ export default class SonyBluray implements UnisonHTDevice {
   }
 
   private ensureOnRepeat(retryCount: number): Promise<void> {
-    return new Promise<void>((resolve, reject)=> {
+    return new Promise<void>((resolve, reject) => {
       return this.sendWakeOnLan()
-        .then(()=> {
+        .then(() => {
           return this.getStatus();
         })
-        .then(()=> {
+        .then(() => {
           return this.getRemoteCommandList();
         })
-        .then((commandList)=> {
+        .then((commandList) => {
           this.commandList = commandList;
         })
-        .then(()=> {
+        .then(() => {
           resolve();
         })
-        .catch((err)=> {
-          log.debug(`could not connect (retry: ${retryCount})`);
+        .catch((err) => {
+          this.log.debug(`could not connect (retry: ${retryCount})`);
           if (retryCount == 0) {
             return reject(err);
           }
-          setTimeout(()=> {
+          setTimeout(() => {
             this.ensureOnRepeat(retryCount--);
           }, 1000);
         })
@@ -115,9 +111,9 @@ export default class SonyBluray implements UnisonHTDevice {
 
   private sendWakeOnLan(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      wol.wake(this.options.mac, (err) => {
+      wol.wake(this.getOptions().mac, (err) => {
         if (err) {
-          log.error('send wol failed: ', err);
+          this.log.error('send wol failed: ', err);
           return reject(err);
         }
         resolve();
@@ -125,13 +121,13 @@ export default class SonyBluray implements UnisonHTDevice {
     });
   }
 
-  private getStatus(): Promise<SonyBluray.Status> {
+  getStatus(): Promise<SonyBluray.Status> {
     return this.getPage('/getStatus');
   }
 
   private getRemoteCommandList(): Promise<{command: string}> {
     return this.getPage('/getRemoteCommandList')
-      .then((xml)=> {
+      .then((xml) => {
         const commandList = {};
         const commands = xpath.select(`//command`, xml);
         for (let i = 0; i < commands.length; i++) {
@@ -147,8 +143,8 @@ export default class SonyBluray implements UnisonHTDevice {
   }
 
   private getPage(url: string, retryOnFailure: boolean = true): Promise<Document> {
-    return new Promise((resolve, reject)=> {
-      var responseData = '';
+    return new Promise((resolve, reject) => {
+      let responseData = '';
       const headers = {
         'Connection': 'close',
         'X-CERS-DEVICE-ID': this.getDeviceId(),
@@ -160,13 +156,13 @@ export default class SonyBluray implements UnisonHTDevice {
         headers['Authorization'] = `Basic ${pass}`;
       }
       const options = {
-        hostname: this.options.address,
-        port: this.options.port,
+        hostname: this.getOptions().address,
+        port: this.getOptions().port,
         path: url,
         method: 'GET',
         headers: headers
       };
-      const req = http.request(options, (res)=> {
+      const req = http.request(options, (res) => {
         res.setEncoding('utf8');
         res.on('data', (chunk) => {
           responseData += chunk;
@@ -174,43 +170,43 @@ export default class SonyBluray implements UnisonHTDevice {
         res.on('end', () => {
           if (res.statusCode == 403 && retryOnFailure) {
             return this.tryRegistrationRenewal()
-              .then(()=> {
+              .then(() => {
                 return this.getPage(url);
               });
           }
           if (res.statusCode != 200) {
-            var error = new Error(`invalid response code: ${res.statusCode}`);
+            const error = new Error(`invalid response code: ${res.statusCode}`);
             (<any>error).statusCode = res.statusCode;
             return reject(error);
           }
           try {
-            var xml = new xmldom.DOMParser().parseFromString(responseData);
+            const xml = new xmldom.DOMParser().parseFromString(responseData);
             resolve(xml);
           } catch (err) {
-            log.error(`invalid xml ${responseData}`);
+            this.log.error(`invalid xml ${responseData}`);
             reject(err);
           }
         });
-        res.on('error', (err)=> {
-          log.error('res error', err);
+        res.on('error', (err) => {
+          this.log.error('res error', err);
         });
       });
       req.on('error', (err) => {
-        log.error('req error', err);
+        this.log.error('req error', err);
         reject(`problem with request: ${err.message}`);
       });
-      log.debug(`sending ${url}`);
+      this.log.debug(`sending ${url}`);
       req.end();
     });
   }
 
   private getDeviceId(): string {
-    return `${this.options.deviceIdPrefix}:${this.macAddress}`;
+    return `${this.getOptions().deviceIdPrefix}:${this.macAddress}`;
   }
 
   private getMacAddress(): Promise<string> {
-    return new Promise((resolve, reject)=> {
-      getmac.getMac((err, macAddress)=> {
+    return new Promise((resolve, reject) => {
+      getmac.getMac((err, macAddress) => {
         if (err) {
           return reject(err);
         }
@@ -222,47 +218,49 @@ export default class SonyBluray implements UnisonHTDevice {
 
   private tryRegistrationRenewal(): Promise<void> {
     return this.getPage(this.getRegistrationUrl('renewal'), false)
-      .catch((err)=> {
+      .catch((err) => {
         if (err.statusCode && err.statusCode == 403) {
           return this.tryRegistrationInitial()
         }
         throw err;
       })
-      .then(()=>{});
+      .then(() => {
+      });
   }
 
   private tryRegistrationInitial(): Promise<void> {
     return this.getPage(this.getRegistrationUrl('initial'), false)
-      .catch((err)=> {
+      .catch((err) => {
         if (err.statusCode && err.statusCode == 401) {
           return this.getRegistrationCodeFromUser()
-            .then((code)=> {
+            .then((code) => {
               this.authCode = code;
               return this.tryRegistrationInitial();
             });
         }
         throw err;
       })
-      .then(()=>{});
+      .then(() => {
+      });
   }
 
   private getRegistrationUrl(type: string): string {
-    const deviceName = encodeURIComponent(this.options.deviceName);
+    const deviceName = encodeURIComponent(this.getOptions().deviceName);
     const deviceId = encodeURIComponent(this.getDeviceId());
     return `/register?name=${deviceName}&registrationType=${type}&deviceId=${deviceId}&wolSupport=true`;
   }
 
   private getRegistrationCodeFromUser(): Promise<string> {
-    return new Promise((resolve, reject)=> {
+    return new Promise((resolve, reject) => {
       return inquirer.prompt([{
         type: 'input',
         name: 'code',
         message: 'Authorization code'
       }])
-        .then((data)=> {
+        .then((data) => {
           return resolve(data['code']);
         })
-        .catch((err)=> {
+        .catch((err) => {
           reject(err);
         })
     })
@@ -296,11 +294,14 @@ export default class SonyBluray implements UnisonHTDevice {
   </s:Body>
 </s:Envelope>`;
   }
+
+  public getOptions(): SonyBluray.Options {
+    return <SonyBluray.Options>super.getOptions();
+  }
 }
 
-module SonyBluray {
-  export interface Options {
-    name: string;
+export module SonyBluray {
+  export interface Options extends Device.Options {
     address: string;
     mac: string;
     irccPort?: number;
@@ -309,7 +310,7 @@ module SonyBluray {
     deviceName?: string;
   }
 
-  export interface Status {
+  export interface Status extends Device.Status {
 
   }
 }

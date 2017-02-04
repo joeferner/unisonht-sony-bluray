@@ -7,8 +7,8 @@
     "index.ts",
     "test.ts",
     "xml.d.ts",
-    "typings/index.d.ts",
     "wol.d.ts",
-    "getmac.d.ts"
+    "getmac.d.ts",
+    "test.ts"
   ]
 }
