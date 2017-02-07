@@ -23,9 +23,14 @@ export class SonyBluray extends Device {
   }
 
   start(unisonht: UnisonHT): Promise<void> {
-    return this.getMacAddress()
-      .then((macAddress) => {
-        this.macAddress = macAddress;
+    return super.start(unisonht)
+      .then(() => {
+        unisonht.getApp().post(`${this.getPathPrefix()}/on`, this.handleOn.bind(this));
+        unisonht.getApp().post(`${this.getPathPrefix()}/off`, this.handleOff.bind(this));
+        return this.getMacAddress()
+          .then((macAddress) => {
+            this.macAddress = macAddress;
+          });
       });
   }
 
@@ -73,13 +78,13 @@ export class SonyBluray extends Device {
     }));
   }
 
-  ensureOn(): Promise<void> {
-    return this.ensureOnRepeat(60);
+  handleOn(req: express.Request, res: UnisonHTResponse, next: express.NextFunction): void {
+    res.promiseNoContent(this.ensureOnRepeat(60));
   }
 
-  ensureOff(): Promise<void> {
-    // TODO
-    return Promise.resolve();
+  handleOff(req: express.Request, res: UnisonHTResponse, next: express.NextFunction): void {
+    // TODO handle off
+    res.promiseNoContent(Promise.resolve());
   }
 
   private ensureOnRepeat(retryCount: number): Promise<void> {
