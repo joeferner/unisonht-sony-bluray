@@ -19,17 +19,19 @@
   },
   "homepage": "https://github.com/joeferner/unisonht-sony-bluray#readme",
   "dependencies": {
-    "getmac": "^1.2.1",
-    "inquirer": "^1.2.3",
-    "wol": "^1.0.3",
-    "xmldom": "^0.1.22",
-    "xpath": "0.0.23",
     "@types/boom": "^0.0.33",
+    "@types/bunyan": "0.0.35",
     "@types/express": "^4.0.35",
     "@types/http-status-codes": "^1.0.29",
     "boom": "^4.2.0",
+    "bunyan": "^1.8.5",
     "express": "^4.14.1",
+    "getmac": "^1.2.1",
     "http-status-codes": "^1.1.6",
-    "unisonht": "^1.0.0"
+    "inquirer": "^1.2.3",
+    "unisonht": "^1.0.0",
+    "wol": "^1.0.3",
+    "xmldom": "^0.1.22",
+    "xpath": "0.0.23"
   }
 }
