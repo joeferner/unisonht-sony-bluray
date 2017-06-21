@@ -5,6 +5,8 @@ import * as xpath from "xpath";
 import * as xmldom from "xmldom";
 import * as getmac from "getmac";
 import * as inquirer from "inquirer";
+import * as fs from "fs";
+import * as path from "path";
 import {SonyBluray} from "./index";
 import * as Logger from "bunyan";
 import {createLogger} from "../unisonht/lib/Log";
@@ -13,10 +15,18 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
   private commandList;
   private authCode: string;
   private macAddress: string;
+  private codeFileName: string;
   private options: SonyBlurayClientImpl.Options;
   private log: Logger;
 
   constructor(options: SonyBlurayClientImpl.Options) {
+    this.codeFileName = path.join(process.env['HOME'], '.unisonht/sony-bluray-code');
+    if (!fs.existsSync(path.dirname(this.codeFileName))) {
+      fs.mkdirSync(path.dirname(this.codeFileName));
+    }
+    if (fs.existsSync(this.codeFileName)) {
+      this.authCode = fs.readFileSync(this.codeFileName, 'utf8');
+    }
     this.log = createLogger('MockSonyBlurayClient');
     this.options = options;
     this.commandList = {};
@@ -123,7 +133,7 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
     });
   }
 
-  private getRemoteCommandList(): Promise<{command: string}> {
+  private getRemoteCommandList(): Promise<{ command: string }> {
     return this.getPage('/getRemoteCommandList')
       .then((xml) => {
         const commandList = {};
@@ -235,7 +245,7 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
       .catch((err) => {
         if (err.statusCode && err.statusCode == 401) {
           return this.getRegistrationCodeFromUser()
-            .then((code) => {
+            .then(code => {
               this.authCode = code;
               return this.tryRegistrationInitial();
             });
@@ -253,6 +263,7 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
   }
 
   private getRegistrationCodeFromUser(): Promise<string> {
+    this.log.info('registration required from user');
     return new Promise((resolve, reject) => {
       return inquirer.prompt([{
         type: 'input',
@@ -260,7 +271,9 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
         message: 'Authorization code'
       }])
         .then((data) => {
-          return resolve(data['code']);
+          const code = data['code'];
+          fs.writeFileSync(this.codeFileName, code);
+          return resolve(code);
         })
         .catch((err) => {
           reject(err);
