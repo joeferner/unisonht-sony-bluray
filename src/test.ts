@@ -2,7 +2,9 @@ import { UnisonHT, WebApi } from '@unisonht/unisonht';
 import { SonyBluray } from '.';
 
 const port = 3000;
-const unisonht = new UnisonHT({});
+const unisonht = new UnisonHT({
+  settingsFileName: '/tmp/unisonht.settings.json',
+});
 unisonht.use(new WebApi({ port }));
 
 unisonht.use(

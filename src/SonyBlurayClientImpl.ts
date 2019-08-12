@@ -113,9 +113,10 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
     const xml = await this.getPage('/getRemoteCommandList');
     const commandList: RemoteCommandList = {};
     const commands: SelectedValue[] = xpath.select(`//command`, xml);
-    for (const command: Element of commands) {
-      const name = command.getAttribute('name');
-      const value = command.getAttribute('value');
+    for (const command of commands) {
+      const commandElement = command as Element;
+      const name = commandElement.getAttribute('name');
+      const value = commandElement.getAttribute('value');
       if (name && value) {
         commandList[name.toUpperCase()] = value;
       }
