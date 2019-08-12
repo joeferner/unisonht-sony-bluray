@@ -1,6 +1,4 @@
 .idea/
-target/
-*.iml
+.vscode/
+dist/
 node_modules/
-typings/
-*.js

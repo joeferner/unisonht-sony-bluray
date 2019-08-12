@@ -1,7 +1,0 @@
-interface Document {
-
-}
-
-interface Node {
-
-}
