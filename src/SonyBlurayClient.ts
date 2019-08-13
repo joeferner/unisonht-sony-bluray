@@ -1,7 +1,8 @@
 import { SonyBlurayStatus } from './SonyBlurayStatus';
+import { SonyBlurayButton } from './SonyBlurayButton';
 
 export interface SonyBlurayClient {
-  buttonPress(buttonName: any): Promise<void>;
+  buttonPress(buttonName: SonyBlurayButton): Promise<void>;
 
   on(): Promise<void>;
 

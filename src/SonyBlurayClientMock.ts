@@ -1,11 +1,12 @@
 import { SonyBlurayClient } from './SonyBlurayClient';
 import Debug from 'debug';
 import { SonyBlurayStatus } from './SonyBlurayStatus';
+import { SonyBlurayButton } from './SonyBlurayButton';
 
 const debug = Debug('UnisonHT:SonyBluray:ClientMock');
 
 export class SonyBlurayClientMock implements SonyBlurayClient {
-  public async buttonPress(buttonName: any): Promise<void> {
+  public async buttonPress(buttonName: SonyBlurayButton): Promise<void> {
     debug(`buttonPress ${buttonName}`);
   }
 

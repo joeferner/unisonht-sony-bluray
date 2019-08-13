@@ -32,7 +32,8 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
   public async buttonPress(button: SonyBlurayButton): Promise<void> {
     const commandValue = this.translateButton(button);
     if (!commandValue) {
-      return Promise.reject(new Error(`Could not find mapping for button ${button}/${commandValue}`));
+      debug(`commandList %o`, this.commandList);
+      throw new Error(`Could not find mapping for button ${button}/${commandValue}`);
     }
     const irccXml = SonyBlurayClientImpl.createIRCCXML(commandValue);
 
@@ -41,6 +42,9 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
       `http://${this.options.address}:${this.options.irccPort}/upnp/control/IRCC`,
       irccXml,
       {
+        validateStatus: status => {
+          return true;
+        },
         headers: {
           Connection: 'close',
           'X-CERS-DEVICE-ID': this.getDeviceId(),
@@ -75,7 +79,6 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
     try {
       debug(`ensureOnRepeat(retryCount: ${retryCount})`);
       await this.sendWakeOnLan();
-      await this.getStatus();
       this.commandList = await this.getRemoteCommandList();
     } catch (err) {
       console.error(`could not connect (retry: ${retryCount})`, err);
@@ -136,9 +139,12 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
       headers.Authorization = `Basic ${pass}`;
     }
 
-    const absoluteUrl = `http://${this.options.address}:${this.options.port}/${url}`;
-    debug(`sending ${url}`);
+    const absoluteUrl = `http://${this.options.address}:${this.options.port}${url}`;
+    debug(`sending ${absoluteUrl}`);
     const response = await axios.get(absoluteUrl, {
+      validateStatus: status => {
+        return true;
+      },
       headers,
     });
     console.log('response', response);
@@ -146,10 +152,10 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
 
     if (response.status === 403 && retryOnFailure) {
       await this.tryRegistrationRenewal();
-      return this.getPage(url);
+      return await this.getPage(url);
     }
     if (response.status !== 200) {
-      const error = new Error(`invalid response code: ${response.status}`);
+      const error = new Error(`invalid response code: ${response.status}: ${response.data}`);
       (error as any).statusCode = response.status;
       throw error;
     }
@@ -166,7 +172,7 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
   }
 
   private translateButton(button: SonyBlurayButton): string {
-    if (!this.commandList) {
+    if (!this.commandList || Object.keys(this.commandList).length === 0) {
       throw new Error('command list not initialized');
     }
     return this.commandList[button.toString().toUpperCase()];

@@ -2,6 +2,8 @@ import {
   NextFunction,
   RouteHandlerRequest,
   RouteHandlerResponse,
+  StandardButton,
+  SupportedButton,
   SupportedButtons,
   UnisonHT,
   UnisonHTDevice,
@@ -10,6 +12,7 @@ import { SonyBlurayClientImpl } from './SonyBlurayClientImpl';
 import { SonyBlurayClient } from './SonyBlurayClient';
 import { SonyBlurayClientMock } from './SonyBlurayClientMock';
 import { SonyBlurayStatus } from './SonyBlurayStatus';
+import { SonyBlurayButton } from './SonyBlurayButton';
 
 export interface SonyBlurayOptions {
   useMockClient?: boolean;
@@ -63,7 +66,7 @@ export class SonyBluray implements UnisonHTDevice {
             unisonht.setSetting(this, 'authCode', newAuthCode);
           },
           promptForAuthCode: async () => {
-            return '';
+            return await unisonht.prompt('Sony Bluray Auth Code?');
           },
         });
     await this.client.start();
@@ -105,6 +108,23 @@ export class SonyBluray implements UnisonHTDevice {
   }
 
   public getSupportedButtons(): SupportedButtons {
-    return {}; // TODO fill in buttons
+    return {
+      [StandardButton.SELECT]: this.createButton('Select', SonyBlurayButton.SELECT),
+      [StandardButton.FORWARD]: this.createButton('Fast Forward', SonyBlurayButton.FASTFORWARD),
+      SKIP: this.createButton('Skip', SonyBlurayButton.SKIP),
+      [StandardButton.INSTANT_REPLAY]: this.createButton('Replay', SonyBlurayButton.REPLAY),
+    };
+  }
+
+  private createButton(name: string, sonyButton: SonyBlurayButton): SupportedButton {
+    return {
+      name,
+      handleButtonPress: async (button, request, response, next) => {
+        if (!this.client) {
+          throw new Error('client not initialized');
+        }
+        await this.client.buttonPress(sonyButton);
+      },
+    };
   }
 }
