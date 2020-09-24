@@ -5,13 +5,14 @@
   "main": "dist/index.js",
   "types": "src/index.ts",
   "scripts": {
-    "test:watch": "nodemon ./dist/test.js",
+    "prepare": "rm -rf dist && npm run build",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
-    "lint": "tslint -p tsconfig.json",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run lint"
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint --fix --ext .ts .",
+    "lint-staged": "lint-staged",
+    "pre-commit": "npm run format && npm run lint-staged && npm run build",
+    "test:watch": "nodemon ./dist/test.js"
   },
   "repository": {
     "type": "git",
@@ -29,37 +30,34 @@
   },
   "homepage": "https://github.com/joeferner/unisonht-sony-bluray#readme",
   "devDependencies": {
-    "@types/debug": "^4.1.5",
-    "@types/node": "^12.7.1",
+    "@types/debug": "4.x",
+    "@types/node": "14.x",
+    "@types/yargs": "15.x",
+    "@typescript-eslint/eslint-plugin": "4.x",
+    "@typescript-eslint/parser": "4.x",
+    "eslint": "7.x",
+    "husky": "4.x",
+    "lint-staged": "10.x",
+    "prettier": "2.x",
+    "ts-node": "9.x",
+    "typescript": "4.x",
+    "nodemon": "2.x",
     "@types/promptly": "^1.1.28",
-    "@types/xmldom": "^0.1.29",
-    "husky": "^3.0.3",
-    "lint-staged": "^9.2.1",
-    "nodemon": "^1.19.1",
-    "prettier": "^1.18.2",
-    "tslint": "^5.18.0",
-    "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.5.3"
+    "@types/xmldom": "^0.1.29"
   },
   "dependencies": {
     "@unisonht/unisonht": "0.0.x",
-    "axios": "^0.19.0",
-    "debug": "^4.1.1",
-    "getmac": "^1.4.6",
-    "promptly": "^3.0.3",
-    "wol": "^1.0.6",
-    "xmldom": "^0.1.27",
-    "xpath": "0.0.27"
+    "axios": "0.19.x",
+    "debug": "4.1.x",
+    "getmac": "1.4.x",
+    "promptly": "3.0.x",
+    "wol": "1.0.x",
+    "xmldom": "0.1.x",
+    "xpath": "0.0.x"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && npm run lint"
+      "pre-commit": "npm run pre-commit"
     }
-  },
-  "lint-staged": {
-    "*.ts": [
-      "npm run format",
-      "git add"
-    ]
   }
 }
