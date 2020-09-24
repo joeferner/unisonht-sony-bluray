@@ -32,27 +32,28 @@
   "devDependencies": {
     "@types/debug": "4.x",
     "@types/node": "14.x",
+    "@types/promptly": "3.x",
+    "@types/wol": "^1.0.0",
+    "@types/xmldom": "0.x",
     "@types/yargs": "15.x",
     "@typescript-eslint/eslint-plugin": "4.x",
     "@typescript-eslint/parser": "4.x",
     "eslint": "7.x",
     "husky": "4.x",
     "lint-staged": "10.x",
+    "nodemon": "2.x",
     "prettier": "2.x",
     "ts-node": "9.x",
-    "typescript": "4.x",
-    "nodemon": "2.x",
-    "@types/promptly": "^1.1.28",
-    "@types/xmldom": "^0.1.29"
+    "typescript": "4.x"
   },
   "dependencies": {
     "@unisonht/unisonht": "0.0.x",
-    "axios": "0.19.x",
-    "debug": "4.1.x",
-    "getmac": "1.4.x",
+    "axios": "0.20.x",
+    "debug": "4.2.x",
+    "getmac": "5.16.x",
     "promptly": "3.0.x",
     "wol": "1.0.x",
-    "xmldom": "0.1.x",
+    "xmldom": "0.3.x",
     "xpath": "0.0.x"
   },
   "husky": {

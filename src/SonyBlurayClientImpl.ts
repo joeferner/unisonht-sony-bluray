@@ -3,7 +3,7 @@ import * as wol from 'wol';
 import * as xpath from 'xpath';
 import { SelectedValue } from 'xpath';
 import * as xmldom from 'xmldom';
-import * as getmac from 'getmac';
+import getMAC from 'getmac';
 import axios from 'axios';
 import Debug from 'debug';
 import { SonyBlurayStatus } from './SonyBlurayStatus';
@@ -192,16 +192,8 @@ export class SonyBlurayClientImpl implements SonyBlurayClient {
         return this.commandList[button.toString().toUpperCase()];
     }
 
-    private getMacAddress(): Promise<string> {
-        return new Promise((resolve, reject) => {
-            getmac.getMac((err, macAddress) => {
-                if (err || !macAddress) {
-                    return reject(err);
-                }
-                macAddress = macAddress.replace(/:/g, '-');
-                resolve(macAddress);
-            });
-        });
+    private async getMacAddress(): Promise<string> {
+        return getMAC().replace(/:/g, '-');
     }
 
     private async tryRegistrationRenewal(): Promise<void> {
