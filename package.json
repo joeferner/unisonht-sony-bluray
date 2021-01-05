@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@unisonht/unisonht": "0.0.x",
-    "axios": "0.20.x",
+    "axios": "0.21.x",
     "debug": "4.2.x",
     "getmac": "5.16.x",
     "promptly": "3.0.x",
