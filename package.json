@@ -53,7 +53,7 @@
     "getmac": "5.16.x",
     "promptly": "3.0.x",
     "wol": "1.0.x",
-    "xmldom": "0.3.x",
+    "xmldom": "0.6.x",
     "xpath": "0.0.x"
   },
   "husky": {
